@@ -19,10 +19,6 @@ def _str2bool(v):
     return v.lower() in ("true","True","TRUE", "yes", "Yes", "YES", "1")
 
 def _recursive_dircmp(folder1, folder2, prefix='.'):
-    print("===== start compare:")
-    print(folder1)
-    print(folder2)
-    print(prefix)
     comparison=filecmp.dircmp(folder1, folder2)
 
     # The comparison results will be summarized in a dictionary with the keys left, right, and both. Each file analyzed will be formatted with a full filepath relative to the root folders compared (denoted as .) and the / path separator.
@@ -45,7 +41,7 @@ def _recursive_dircmp(folder1, folder2, prefix='.'):
             # add results from sub_report to main report
             for key, value in sub_report.items():
                 data[key] += value
-    print("----- end compare")
+
     return data
 
 def _write_to_csv(folder1, folder2, output, listFolder2, listCommonFiles, report):

@@ -1,5 +1,5 @@
-folder1: "/Users/huang/Documents/Workspace/compFolders/Test/dir1"
-folder2: "/Users/huang/Documents/Workspace/compFolders/Test/dir2"
+folder1: "./Test/dir1"
+folder2: "./Test/dir2"
 csv: "./output.csv"
 listFolder2: True
 listCommonFiles: True
