@@ -2,6 +2,7 @@ import os
 import filecmp
 import csv
 import yaml
+import sys
 
 def read_config():
     with open("config.yml", "r") as ymlfile:
@@ -19,31 +20,41 @@ def _str2bool(v):
     return v.lower() in ("true","True","TRUE", "yes", "Yes", "YES", "1")
 
 def _recursive_dircmp(folder1, folder2, prefix='.'):
+
     comparison=filecmp.dircmp(folder1, folder2)
 
     # The comparison results will be summarized in a dictionary with the keys left, right, and both. Each file analyzed will be formatted with a full filepath relative to the root folders compared (denoted as .) and the / path separator.
-    data = {
-        'left': [r'{}/{}'.format(prefix, i) for i in comparison.left_only],
-        'right': [r'{}/{}'.format(prefix, i) for i in comparison.right_only],
-        'both': [r'{}/{}'.format(prefix, i) for i in comparison.same_files],
-        'both_diff': [r'{}/{}'.format(prefix, i) for i in comparison.diff_files],
-    }
+    try:
+        data = {
+            'left': [r'{}/{}'.format(prefix, i) for i in comparison.left_only],
+            'right': [r'{}/{}'.format(prefix, i) for i in comparison.right_only],
+            'both': [r'{}/{}'.format(prefix, i) for i in comparison.same_files],
+            'both_diff': [r'{}/{}'.format(prefix, i) for i in comparison.diff_files],
+        }
+        for datalist in data.values():
+            datalist.sort()
 
-    for datalist in data.values():
-        datalist.sort()
-
-    if comparison.common_dirs:
-        for folder in comparison.common_dirs:
-            # compare common folder and add results to the report
-            sub_folder1=os.path.join(folder1, folder)
-            sub_folder2=os.path.join(folder2, folder)
-            sub_report = _recursive_dircmp(sub_folder1,sub_folder2, prefix + "/"+folder)
-            # add results from sub_report to main report
-            for key, value in sub_report.items():
-                data[key] += value
+        if comparison.common_dirs:
+            for folder in comparison.common_dirs:
+                # compare common folder and add results to the report
+                sub_folder1=os.path.join(folder1, folder)
+                sub_folder2=os.path.join(folder2, folder)
+                sub_report = _recursive_dircmp(sub_folder1,sub_folder2, prefix + "/"+folder)
+                # add results from sub_report to main report
+                for key, value in sub_report.items():
+                    data[key] += value
+    except IOError as e:
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
+        print("folder1: "+ folder1)
+        print("folder2: "+ folder2)
+        pass
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        pass
 
     return data
-
+    
+    
 def _write_to_csv(folder1, folder2, output, listFolder2, listCommonFiles, report):
     """Write the comparison report to a CSV file for use in Excel."""
 
@@ -85,5 +96,8 @@ def _write_to_csv(folder1, folder2, output, listFolder2, listCommonFiles, report
 
 
 folder1, folder2, output, listFolder2, listCommonFiles =read_config()
-compare(folder1, folder2, output, listFolder2, listCommonFiles)
-print("Comparison is generated and output to " + output )
+if os.path.isdir(folder1) and os.path.isdir(folder2):
+    compare(folder1, folder2, output, listFolder2, listCommonFiles)
+    print("Comparison is generated and output to " + output )
+else:
+    print("One of the folders in config.yml is invalid")
